@@ -25,7 +25,7 @@
       "image_publisher": "OpenLogic",
       "image_offer": "CentOS",
       "image_sku": "7.3",
-      "image_version": "{{user `version`}}",
+      "image_version": "latest",
   
       "azure_tags": {
           "envid": "{{user `envid`}}",

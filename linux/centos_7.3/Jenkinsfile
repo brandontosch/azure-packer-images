@@ -58,7 +58,8 @@ node(nodeLabel) {
             [$class: 'VaultSecretValue', envVar: 'ARM_SUBSCRIPTION_ID', vaultKey: 'subscription_id'],
             [$class: 'VaultSecretValue', envVar: 'ARM_TENANT_ID', vaultKey: 'tenant_id'],
             [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_SECRET', vaultKey: 'client_secret'],
-            [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_ID', vaultKey: 'client_id']]]
+            [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_ID', vaultKey: 'client_id'],
+            [$class: 'VaultSecretValue', envVar: 'ARM_SPN_OBJECT_ID', vaultKey: 'principal_id']]]
     ]
 
     try {
@@ -90,7 +91,7 @@ node(nodeLabel) {
                 ansiColor('xterm') {
                     wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
                         sh 'az login -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --service-principal --tenant "$ARM_TENANT_ID"'
-                        version = sh script: "az vm image list -l \"${location}\" -p OpenLogic -s 7.3 --all --query \"[?offer=='CentOS'].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
+                        version = sh script: "az vm image list -l \"${location}\" -p OpenLogic -s 7.3 -f CentOS --all --query \"[].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
                     }
                 }
             }
