@@ -91,7 +91,7 @@ node(nodeLabel) {
                     wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
                         sh 'azure telemetry --disable'
                         sh 'azure login -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --service-principal --tenant "$ARM_TENANT_ID"'
-                        version = sh script: "azure vm image list -l \"${location}\" -p OpenLogic -f CentOS -s 7.3 --all --query \"[?offer=='CentOS'].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
+                        version = sh script: "azure vm image list -l \"${location}\" -p OpenLogic -s 7.3 --all --query \"[?offer=='CentOS'].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
                     }
                 }
             }
