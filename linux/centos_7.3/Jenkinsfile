@@ -58,8 +58,7 @@ node(nodeLabel) {
             [$class: 'VaultSecretValue', envVar: 'ARM_SUBSCRIPTION_ID', vaultKey: 'subscription_id'],
             [$class: 'VaultSecretValue', envVar: 'ARM_TENANT_ID', vaultKey: 'tenant_id'],
             [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_SECRET', vaultKey: 'client_secret'],
-            [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_ID', vaultKey: 'client_id'],
-            [$class: 'VaultSecretValue', envVar: 'ARM_SPN_OBJECT_ID', vaultKey: 'principal_id']]]
+            [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_ID', vaultKey: 'client_id']]]
     ]
 
     try {
