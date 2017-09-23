@@ -95,6 +95,14 @@ node(nodeLabel) {
                 }
             }
 
+            stage("group") {
+                ansiColor('xterm') {
+                    wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
+                        sh "az group exists -n ${envid}images_rg"
+                    }
+                }
+            }
+
             stage('build') {
                 dir("linux/centos_7.3") {
                     ansiColor('xterm') {
