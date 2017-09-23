@@ -17,6 +17,7 @@
       "client_secret": "{{user `arm_client_secret`}}",
       "tenant_id": "{{user `arm_tenant_id`}}",
       "subscription_id": "{{user `arm_subscription_id`}}",
+      "object_id": "{{uuid}}",
   
       "managed_image_resource_group_name": "{{user `envid`}}images_rg",
       "managed_image_name": "{{user `envid`}}centos_7_{{user `version`}}",
