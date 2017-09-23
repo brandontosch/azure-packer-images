@@ -123,7 +123,7 @@ def notifyBuild(String buildStatus = 'STARTED') {
   // Default values.
   def colorName = 'RED'
   def colorCode = '#FF0000'
-  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' envid '${params.envid}' action '${params.action}' target '${params.target}' sub '${params.subscription}'"
+  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' envid '${params.envid}' sub '${params.subscription}'"
   def envid = "${params.envid}".toLowerCase()
 
   if (envid == 'null' || envid == '') {
