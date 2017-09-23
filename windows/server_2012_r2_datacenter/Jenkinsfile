@@ -59,7 +59,8 @@ node(nodeLabel) {
             [$class: 'VaultSecretValue', envVar: 'ARM_SUBSCRIPTION_ID', vaultKey: 'subscription_id'],
             [$class: 'VaultSecretValue', envVar: 'ARM_TENANT_ID', vaultKey: 'tenant_id'],
             [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_SECRET', vaultKey: 'client_secret'],
-            [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_ID', vaultKey: 'client_id']]]
+            [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_ID', vaultKey: 'client_id'],
+            [$class: 'VaultSecretValue', envVar: 'ARM_SPN_OBJECT_ID', vaultKey: 'principal_id']]]
     ]
 
     try {
@@ -91,16 +92,7 @@ node(nodeLabel) {
                 ansiColor('xterm') {
                     wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
                         sh 'az login -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --service-principal --tenant "$ARM_TENANT_ID"'
-                        version = sh script: "az vm image list -l \"${location}\" -p MicrosoftWindowsServer -s 2012-R2-Datacenter --all --query \"[?offer=='WindowsServer'].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
-                    }
-                }
-            }
-
-            stage("spn") {
-                ansiColor('xterm') {
-                    wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
-                        def identifierUri = sh script: 'az ad sp show --id $ARM_CLIENT_ID --query "identifierUris[0]" -o tsv', returnStdout: true
-                        objectId = sh script: "az role assignment list --query \"[?properties.principalName=='${identifierUri}'].properties.principalId\" -o tsv"
+                        version = sh script: "az vm image list -l \"${location}\" -p MicrosoftWindowsServer -s 2012-R2-Datacenter -f WindowsServer --all --query \"[].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
                     }
                 }
             }
@@ -121,9 +113,7 @@ node(nodeLabel) {
                 dir("windows/server_2012_r2_datacenter") {
                     ansiColor('xterm') {
                         wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
-                            withEnv(["ARM_SPN_OBJECT_ID=${objectId}"]) {
-                                sh "packer build -var 'azure_location=${location}' -var 'envid=${envid}' -var 'version=${version}' -var 'created_by=packer' template.json"
-                            }
+                            sh "packer build -var 'azure_location=${location}' -var 'envid=${envid}' -var 'version=${version}' -var 'created_by=packer' template.json"
                         }
                     }
                 }
