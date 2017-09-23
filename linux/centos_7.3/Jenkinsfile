@@ -19,7 +19,7 @@ properties([
 
 // By default the job will use secrets from usw90 and West US 2 as location.
 def secretsEnvid = "usw90"
-def location = "West US 2"
+def location = "westus2"
 def envid = "${params.envid}".toLowerCase()
 def nodeLabel = "jenkins-slave-packer-azure-${envid}"
 def version = ''
@@ -98,7 +98,11 @@ node(nodeLabel) {
             stage("group") {
                 ansiColor('xterm') {
                     wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
-                        sh "az group exists -n ${envid}images_rg"
+                        def groupExists = sh script:"az group exists -n ${envid}images_rg", returnStdout: true
+
+                        if (groupExists.toLowerCase() == "false") {
+                            sh "az group create -n ${envid}images_rg -l ${location}"
+                        }
                     }
                 }
             }
