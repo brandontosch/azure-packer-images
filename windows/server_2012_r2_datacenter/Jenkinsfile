@@ -23,6 +23,7 @@ def location = "westus2"
 def envid = "${params.envid}".toLowerCase()
 def nodeLabel = "jenkins-slave-packer-azure-${envid}"
 def version = ''
+def objectId = ''
 
 // If using the pre-prod subscription, override the secrets envid
 if ("${params.subscription}".toLowerCase() == "pre-prod") {
@@ -98,8 +99,7 @@ node(nodeLabel) {
             stage("spn") {
                 ansiColor('xterm') {
                     wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
-                        sh 'az ad sp create --id $ARM_CLIENT_ID'
-                        sh 'az ad sp show --id $ARM_CLIENT_ID --query "[].object_id" -o tsv'
+                        objectId = sh 'az ad sp show --id $ARM_CLIENT_ID --query "objectId" -o tsv'
                     }
                 }
             }
@@ -120,7 +120,9 @@ node(nodeLabel) {
                 dir("windows/server_2012_r2_datacenter") {
                     ansiColor('xterm') {
                         wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
-                            sh "packer build -var 'azure_location=${location}' -var 'envid=${envid}' -var 'version=${version}' -var 'created_by=packer' template.json"
+                            withEnv(["ARM_SPN_OBJECT_ID=${objectId}"]) {
+                                sh "packer build -var 'azure_location=${location}' -var 'envid=${envid}' -var 'version=${version}' -var 'created_by=packer' template.json"
+                            }
                         }
                     }
                 }
