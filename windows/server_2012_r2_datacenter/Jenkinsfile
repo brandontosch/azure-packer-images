@@ -58,8 +58,7 @@ node(nodeLabel) {
             [$class: 'VaultSecretValue', envVar: 'ARM_SUBSCRIPTION_ID', vaultKey: 'subscription_id'],
             [$class: 'VaultSecretValue', envVar: 'ARM_TENANT_ID', vaultKey: 'tenant_id'],
             [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_SECRET', vaultKey: 'client_secret'],
-            [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_ID', vaultKey: 'client_id'],
-            [$class: 'VaultSecretValue', envVar: 'ARM_OBJECT_ID', vaultKey: 'object_id']]]
+            [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_ID', vaultKey: 'client_id']]]
     ]
 
     try {
@@ -92,6 +91,15 @@ node(nodeLabel) {
                     wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
                         sh 'az login -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --service-principal --tenant "$ARM_TENANT_ID"'
                         version = sh script: "az vm image list -l \"${location}\" -p MicrosoftWindowsServer -s 2012-R2-Datacenter --all --query \"[?offer=='WindowsServer'].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
+                    }
+                }
+            }
+
+            stage("spn") {
+                ansiColor('xterm') {
+                    wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
+                        sh 'az ad sp create --id $ARM_CLIENT_ID'
+                        sh 'az ad sp show --id $ARM_CLIENT_ID --query "[].object_id" -o tsv'
                     }
                 }
             }
