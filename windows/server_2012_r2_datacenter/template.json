@@ -28,6 +28,12 @@
       "image_offer": "WindowsServer",
       "image_sku": "2012-R2-Datacenter",
       "image_version": "latest",
+
+      "communicator": "winrm",
+      "winrm_use_ssl": "true",
+      "winrm_insecure": "true",
+      "winrm_timeout": "3m",
+      "winrm_username": "packer",
   
       "azure_tags": {
           "envid": "{{user `envid`}}",
