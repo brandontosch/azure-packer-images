@@ -99,7 +99,8 @@ node(nodeLabel) {
             stage("spn") {
                 ansiColor('xterm') {
                     wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
-                        objectId = sh script: 'az ad sp show --id $ARM_CLIENT_ID --query "objectId" -o tsv', returnStdout: true
+                        def identifierUri = sh script: 'az ad sp show --id $ARM_CLIENT_ID --query "identifierUris[0]" -o tsv', returnStdout: true
+                        objectId = sh script: "az role assignment list --query \"[?properties.principalName=='${identifierUri}'].properties.principalId\" -o tsv"
                     }
                 }
             }
