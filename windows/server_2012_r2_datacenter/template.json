@@ -20,7 +20,7 @@
       "subscription_id": "{{user `arm_subscription_id`}}",
       "object_id": "{{user `arms_spn_object_id`}}",
   
-      "managed_image_resource_group_name": "{{user `envid`}}images_rg",
+      "managed_image_resource_group_name": "{{user `envid`}}images_rg_{{user `version`}}",
       "managed_image_name": "{{user `envid`}}centos_7_{{user `version`}}",
   
       "os_type": "Windows",
