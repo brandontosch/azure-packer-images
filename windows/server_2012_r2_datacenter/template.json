@@ -20,14 +20,14 @@
       "subscription_id": "{{user `arm_subscription_id`}}",
       "object_id": "{{user `arms_spn_object_id`}}",
   
-      "managed_image_resource_group_name": "{{user `envid`}}images_rg_{{user `version`}}",
-      "managed_image_name": "{{user `envid`}}centos_7_{{user `version`}}",
+      "managed_image_resource_group_name": "{{user `envid`}}images_rg",
+      "managed_image_name": "{{user `envid`}}windows_server_2012_r2_datacenter_{{user `version`}}",
   
       "os_type": "Windows",
       "image_publisher": "MicrosoftWindowsServer",
       "image_offer": "WindowsServer",
       "image_sku": "2012-R2-Datacenter",
-      "image_version": "{{user `version`}}",
+      "image_version": "latest",
   
       "azure_tags": {
           "envid": "{{user `envid`}}",
