@@ -86,6 +86,7 @@ node(nodeLabel) {
                     wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
                         sh 'az login -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --service-principal --tenant "$ARM_TENANT_ID"'
                         version = sh script: "az vm image list -l \"${location}\" -p MicrosoftWindowsServer -s 2012-R2-Datacenter -f WindowsServer --all --query \"[].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
+                        sh "echo \"version: ${version}\""
                         version = version.trim().replaceAll(/ /, "_")
                     }
                 }
