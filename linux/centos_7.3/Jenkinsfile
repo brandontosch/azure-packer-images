@@ -112,7 +112,7 @@ node(nodeLabel) {
                 dir("linux/centos_7.3") {
                     ansiColor('xterm') {
                         wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
-                            sh "packer build -var 'azure_location=${location}' -var 'envid=${envid}' -var 'version=${version}' -var 'created_by=packer' template.json"
+                            sh "packer build -on-error=abort -var 'azure_location=${location}' -var 'envid=${envid}' -var 'version=${version}' -var 'created_by=packer' template.json"
                         }
                     }
                 }
