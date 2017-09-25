@@ -78,7 +78,7 @@ node(nodeLabel) {
             // check stage
             // Jenkins runs checks to validate packer template syntax
             stage('check') {
-                dir("windows/server_2012_r2_datacenter") {
+                dir("windows/server_2016_datacenter") {
                     ansiColor('xterm') {
                         sh 'packer validate -syntax-only template.json'
                     }
@@ -111,7 +111,7 @@ node(nodeLabel) {
             }
 
             stage('build') {
-                dir("windows/server_2012_r2_datacenter") {
+                dir("windows/server_2016_datacenter") {
                     ansiColor('xterm') {
                         wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
                             sh "packer build -var 'azure_location=${location}' -var 'envid=${envid}' -var 'version=${version}' -var 'created_by=packer' template.json"
