@@ -97,7 +97,7 @@ node(nodeLabel) {
                     wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
                         def groupExists = sh script:"az group exists -n ${envid}images_rg", returnStdout: true
 
-                        if (groupExists.toLowerCase() != "false") {
+                        if (groupExists.trim().toLowerCase() != "false") {
                             sh "az group create -n ${envid}images_rg -l ${location}"
                         }
                     }
