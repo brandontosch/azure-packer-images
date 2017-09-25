@@ -21,7 +21,7 @@ properties([
 def secretsEnvid = "usw90"
 def location = "westus2"
 def envid = "${params.envid}".toLowerCase()
-def nodeLabel = "jenkins-slave-packer-azure-${envid}"
+def nodeLabel = "jenkins-slave-packer-azure"
 def version = ''
 def objectId = ''
 
@@ -43,13 +43,6 @@ if (envid.startsWith("usw8")) {
     secretsEnvid = "usw02"
 } else if (envid == "aue01") {
     secretsEnvid = "aue01"
-}
-
-// If targeting an unknown environment, use the generic build node
-//
-// TODO: add other known environments as they are created
-if (!["usw90","usw80","usw20","euw01","usw01","aue01","usw02"].contains(envid)) {
-    nodeLabel = 'jenkins-slave-packer-azure'
 }
 
 node(nodeLabel) {
