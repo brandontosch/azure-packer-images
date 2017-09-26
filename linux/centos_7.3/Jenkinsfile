@@ -24,6 +24,7 @@ def envid = "${params.envid}".toLowerCase()
 def nodeLabel = "jenkins-slave-packer-azure"
 def resourceGroup = "${envid}images_rg"
 def version = ''
+def versionNumber = 'tbd'
 
 // If using the pre-prod subscription, override the secrets envid
 if ("${params.subscription}".toLowerCase() == "pre-prod") {
@@ -94,6 +95,7 @@ node(nodeLabel) {
                     // Get latest version number for the image
                     version = sh script: "az vm image list -l \"${location}\" -p OpenLogic -s 7.3 -f CentOS --all --query \"[?offer=='CentOS'].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
                     version = version.trim()
+                    versionNumber = VersionNumber versionNumberString: '${version}'
                     sh "echo \"version: ${version}\""
                 }
             }
@@ -141,14 +143,14 @@ node(nodeLabel) {
     }
 }
 
-def notifyBuild(String buildStatus = 'STARTED') {
+def notifyBuild(String buildStatus = 'STARTED', String version) {
   // Build status of null means successful.
   buildStatus =  buildStatus ?: 'SUCCESSFUL'
 
   // Default values.
   def colorName = 'RED'
   def colorCode = '#FF0000'
-  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' envid '${params.envid}' sub '${params.subscription}'"
+  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' envid '${params.envid}' sub '${params.subscription}' version '${version}'"
   def envid = "${params.envid}".toLowerCase()
 
   if (envid == 'null' || envid == '') {
