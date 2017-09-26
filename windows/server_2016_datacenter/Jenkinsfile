@@ -97,7 +97,7 @@ node(nodeLabel) {
                     // Get latest version number for the image
                     version = sh script: "az vm image list -l \"${location}\" -p MicrosoftWindowsServer -s 2016-Datacenter -f WindowsServer --all --query \"[].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
                     version = version.trim()
-                    versionNumber = VersionNumber versionNumberString: '${version}'
+                    versionNumber = VersionNumber versionNumberString: "${version}"
                     sh "echo \"version: ${version}\""
                 }
             }
