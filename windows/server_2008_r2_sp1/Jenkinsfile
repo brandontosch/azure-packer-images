@@ -81,7 +81,6 @@ node(nodeLabel) {
 
         // If an environment id was not provided, then we assume this is a CI job and proceed no further.
         if (envid != 'null' && envid != '') {
-            if (envid != 'null' && envid != '') {
             stage('azlogin') {
                 wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
                     // Login to azure using service principal
