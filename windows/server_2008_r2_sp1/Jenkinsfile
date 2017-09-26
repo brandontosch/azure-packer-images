@@ -103,11 +103,11 @@ node(nodeLabel) {
             stage("group") {
                 ansiColor('xterm') {
                     // Check if the images resource group exists already
-                    def groupExists = sh script:"az group exists -n ${envid}images_rg", returnStdout: true
+                    def groupExists = sh script:"az group exists -n ${resourceGroup}", returnStdout: true
 
                     if (groupExists.trim().toLowerCase() != "true") {
                         // If not, create it
-                        sh "az group create -n ${envid}images_rg -l ${location}"
+                        sh "az group create -n ${resourceGroup} -l ${location}"
                     }
                 }
             }
