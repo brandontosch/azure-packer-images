@@ -109,6 +109,17 @@ node(nodeLabel) {
                 }
             }
 
+            stage('delete') {
+                ansiColor('xterm') {
+                    def existingId = sh script: "az image list -g '${resourceGroup}' --query \"[?name=='${envid}centos_7.3'].id\" -o tsv", returnStdout: true
+                    existingId = existingId.trim()
+
+                    if (existingId != '') {
+                        sh "az image delete --ids '${existingId}'"
+                    }
+                }
+            }
+
             stage('build') {
                 dir("linux/centos_7.3") {
                     ansiColor('xterm') {

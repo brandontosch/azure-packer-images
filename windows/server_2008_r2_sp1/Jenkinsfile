@@ -111,6 +111,17 @@ node(nodeLabel) {
                 }
             }
 
+            stage('delete') {
+                ansiColor('xterm') {
+                    def existingId = sh script: "az image list -g '${resourceGroup}' --query \"[?name=='${envid}windows_server_2008_r2_sp1'].id\" -o tsv", returnStdout: true
+                    existingId = existingId.trim()
+
+                    if (existingId != '') {
+                        sh "az image delete --ids '${existingId}'"
+                    }
+                }
+            }
+
             stage('build') {
                 dir("windows/server_2008_r2_sp1") {
                     ansiColor('xterm') {
