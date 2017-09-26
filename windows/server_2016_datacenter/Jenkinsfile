@@ -22,6 +22,7 @@ def secretsEnvid = "usw90"
 def location = "westus2"
 def envid = "${params.envid}".toLowerCase()
 def nodeLabel = "jenkins-slave-packer-azure"
+def resourceGroup = "${envid}images_rg"
 def version = ''
 def objectId = ''
 
@@ -101,11 +102,21 @@ node(nodeLabel) {
             stage("group") {
                 ansiColor('xterm') {
                     // Check if the images resource group exists already
-                    def groupExists = sh script:"az group exists -n ${envid}images_rg", returnStdout: true
+                    def groupExists = sh script:"az group exists -n ${resourceGroup}", returnStdout: true
 
                     if (groupExists.trim().toLowerCase() != "true") {
                         // If not, create it
-                        sh "az group create -n ${envid}images_rg -l ${location}"
+                        sh "az group create -n ${resourceGroup} -l ${location}"
+                    }
+                }
+            }
+
+            stage('delete') {
+                ansiColor('xterm') {
+                    def existingId = sh script: "az image list -g '${resourceGroup}' --query \"[?name=='${envid}windows_server_2016_datacenter'].id\" -o tsv", returnStdout: true
+
+                    if (existingId.trim() != '') {
+                        sh "az image delete --ids '${existingId}'"
                     }
                 }
             }
