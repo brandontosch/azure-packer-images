@@ -1,0 +1,160 @@
+properties([
+    // For CI integration with gitlabs.
+    [$class: 'GitLabConnectionProperty', gitLabConnection: 'lai1pucreps0001.inf.local'],
+
+    // Job parameter defintions.
+    parameters([
+        stringParam(
+            description: 'Azure Environment ID',
+            name: 'envid',
+            defaultValue: ''
+        ),
+        choiceParam(
+            description: 'Which subscription to use for deployment',
+            name: 'subscription',
+            choices: 'Dev/QA\nPre-Prod\nProd'
+        )
+    ])
+])
+
+// By default the job will use secrets from usw90 and West US 2 as location.
+def secretsEnvid = "usw90"
+def location = "westus2"
+def envid = "${params.envid}".toLowerCase()
+def nodeLabel = "jenkins-slave-packer-azure"
+def version = ''
+def objectId = ''
+
+// If using the pre-prod subscription, override the secrets envid
+if ("${params.subscription}".toLowerCase() == "pre-prod") {
+    secretsEnvid = "usw20"
+}
+
+// If we're deploying to a known environment, override the secrets envid
+//
+// TODO: make this generic for all known environments
+if (envid.startsWith("usw8")) {
+    secretsEnvid = "usw80"
+} else if (envid == "usw01") {
+    secretsEnvid = "usw01"
+} else if (envid == "euw01") {
+    secretsEnvid = "euw01"
+} else if (envid == "usw02") {
+    secretsEnvid = "usw02"
+} else if (envid == "aue01") {
+    secretsEnvid = "aue01"
+}
+
+node(nodeLabel) {
+    // Retrieve azure secrets from vault.
+    def azureSecrets = [
+        [$class: 'VaultSecret', path: "secret/${secretsEnvid}/azure", secretValues: [
+            [$class: 'VaultSecretValue', envVar: 'ARM_SUBSCRIPTION_ID', vaultKey: 'subscription_id'],
+            [$class: 'VaultSecretValue', envVar: 'ARM_TENANT_ID', vaultKey: 'tenant_id'],
+            [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_SECRET', vaultKey: 'client_secret'],
+            [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_ID', vaultKey: 'client_id'],
+            [$class: 'VaultSecretValue', envVar: 'ARM_SPN_OBJECT_ID', vaultKey: 'principal_id']]]
+    ]
+
+    try {
+        // Send slack notification that build has started.
+        notifyBuild('STARTED')
+
+        // For CI integration with gitlabs
+        gitlabCommitStatus('packer') {
+            // git stage
+            // Jenkins retrieves lastest code from git
+            stage('git') {
+                checkout scm
+            }
+
+            // check stage
+            // Jenkins runs checks to validate packer template syntax
+            stage('check') {
+                dir("windows/server_2008_r2_sp1") {
+                    ansiColor('xterm') {
+                        sh 'packer validate -syntax-only template.json'
+                    }
+                }
+            }
+        }
+
+        // If an environment id was not provided, then we assume this is a CI job and proceed no further.
+        if (envid != 'null' && envid != '') {
+            stage('version') {
+                ansiColor('xterm') {
+                    wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
+                        sh 'az login -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --service-principal --tenant "$ARM_TENANT_ID"'
+                        version = sh script: "az vm image list -l \"${location}\" -p MicrosoftWindowsServer -s 2008-R2-SP1 -f WindowsServer --all --query \"[].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
+                        sh "echo \"version: ${version}\""
+                        version = version.trim().replaceAll(/ /, "_")
+                    }
+                }
+            }
+
+            stage("group") {
+                ansiColor('xterm') {
+                    wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
+                        def groupExists = sh script:"az group exists -n ${envid}images_rg", returnStdout: true
+
+                        if (groupExists.trim().toLowerCase() != "false") {
+                            sh "az group create -n ${envid}images_rg -l ${location}"
+                        }
+                    }
+                }
+            }
+
+            stage('build') {
+                dir("windows/server_2008_r2_sp1") {
+                    ansiColor('xterm') {
+                        wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
+                            sh "packer build -var 'azure_location=${location}' -var 'envid=${envid}' -var 'version=${version}' -var 'created_by=packer' template.json"
+                        }
+                    }
+                }
+            }
+        }
+    } catch (any) {
+        // If there was an exception thrown, the build failed.
+        currentBuild.result = "FAILED"
+        throw any
+    } finally {
+        // Success or failure, always send notifications.
+        notifyBuild(currentBuild.result)
+    }
+}
+
+def notifyBuild(String buildStatus = 'STARTED') {
+  // Build status of null means successful.
+  buildStatus =  buildStatus ?: 'SUCCESSFUL'
+
+  // Default values.
+  def colorName = 'RED'
+  def colorCode = '#FF0000'
+  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' envid '${params.envid}' sub '${params.subscription}'"
+  def envid = "${params.envid}".toLowerCase()
+
+  if (envid == 'null' || envid == '') {
+      subject = "${buildStatus}: CI Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]'"
+  }
+
+  def summary = "${subject} (${env.BUILD_URL})"
+
+  // Override default values based on build status.
+  if (buildStatus == 'STARTED') {
+    color = 'YELLOW'
+    colorCode = '#FFFF00'
+  } else if (buildStatus == 'INPUT_REQUIRED' || buildStatus == 'APPLYING' || buildStatus == 'DESTROYING'){
+    color = 'BLUE'
+    colorCode = '#0000FF'
+  } else if (buildStatus == 'SUCCESSFUL') {
+    color = 'GREEN'
+    colorCode = '#00FF00'
+  } else {
+    color = 'RED'
+    colorCode = '#FF0000'
+  }
+
+  // Send notifications.
+  slackSend (color: colorCode, message: summary)
+}
