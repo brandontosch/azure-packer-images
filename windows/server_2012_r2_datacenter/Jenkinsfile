@@ -111,7 +111,7 @@ node(nodeLabel) {
                 }
             }
 
-             stage('delete') {
+            stage('delete') {
                 ansiColor('xterm') {
                     def existingId = sh script: "az image list -g '${resourceGroup}' --query \"[?name=='${envid}windows_server_2012_r2_datacenter'].id\" -o tsv", returnStdout: true
                     existingId = existingId.trim()
