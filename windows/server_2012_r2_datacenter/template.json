@@ -21,7 +21,7 @@
       "object_id": "{{user `arms_spn_object_id`}}",
   
       "managed_image_resource_group_name": "{{user `envid`}}images_rg",
-      "managed_image_name": "{{user `envid`}}windows_server_2012_r2_datacenter_{{user `version`}}",
+      "managed_image_name": "{{user `envid`}}windows_server_2012_r2_datacenter",
   
       "os_type": "Windows",
       "image_publisher": "MicrosoftWindowsServer",
