@@ -99,14 +99,12 @@ node(nodeLabel) {
 
             stage("group") {
                 ansiColor('xterm') {
-                    wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
-                        // Check if the images resource group exists already
-                        def groupExists = sh script:"az group exists -n ${envid}images_rg", returnStdout: true
+                    // Check if the images resource group exists already
+                    def groupExists = sh script:"az group exists -n ${envid}images_rg", returnStdout: true
 
-                        if (groupExists.trim().toLowerCase() != "true") {
-                            // If not, create it
-                            sh "az group create -n ${envid}images_rg -l ${location}"
-                        }
+                    if (groupExists.trim().toLowerCase() != "true") {
+                        // If not, create it
+                        sh "az group create -n ${envid}images_rg -l ${location}"
                     }
                 }
             }
