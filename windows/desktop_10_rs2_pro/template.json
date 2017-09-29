@@ -1,0 +1,54 @@
+{
+    "variables": {
+        "arm_client_id": "{{env `ARM_CLIENT_ID`}}",
+        "arm_client_secret": "{{env `ARM_CLIENT_SECRET`}}",
+        "arm_tenant_id": "{{env `ARM_TENANT_ID`}}",
+        "arm_subscription_id": "{{env `ARM_SUBSCRIPTION_ID`}}",
+        "arms_spn_object_id": "{{env `ARM_SPN_OBJECT_ID`}}",
+        "azure_location": null,
+        "envid": null,
+        "version": null,
+        "created_by": null
+    },
+
+    "builders": [{
+      "type": "azure-arm",
+  
+      "client_id": "{{user `arm_client_id`}}",
+      "client_secret": "{{user `arm_client_secret`}}",
+      "tenant_id": "{{user `arm_tenant_id`}}",
+      "subscription_id": "{{user `arm_subscription_id`}}",
+      "object_id": "{{user `arms_spn_object_id`}}",
+  
+      "managed_image_resource_group_name": "{{user `envid`}}images_rg",
+      "managed_image_name": "{{user `envid`}}windows_desktop_10_rs2_pro",
+  
+      "os_type": "Windows",
+      "image_publisher": "MicrosoftWindowsDesktop",
+      "image_offer": "Windows-10",
+      "image_sku": "RS2-Pro",
+      "image_version": "{{user `version`}}",
+
+      "communicator": "winrm",
+      "winrm_use_ssl": "true",
+      "winrm_insecure": "true",
+      "winrm_timeout": "3m",
+      "winrm_username": "packer",
+  
+      "azure_tags": {
+          "envid": "{{user `envid`}}",
+          "created_by": "{{user `created_by`}}"
+      },
+  
+      "location": "{{user `azure_location`}}",
+      "vm_size": "Standard_DS2_v2"
+    }],
+
+    "provisioners": [{
+      "type": "powershell",
+      "inline": [
+        "if( Test-Path $Env:SystemRoot\\windows\\system32\\Sysprep\\unattend.xml ){ rm $Env:SystemRoot\\windows\\system32\\Sysprep\\unattend.xml -Force}",
+        "& $Env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /shutdown /quiet"
+      ]
+    }]
+  }
