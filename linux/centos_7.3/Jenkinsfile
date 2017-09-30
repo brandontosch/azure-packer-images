@@ -8,11 +8,6 @@ properties([
             description: 'Azure Environment ID',
             name: 'envid',
             defaultValue: ''
-        ),
-        choiceParam(
-            description: 'Which subscription to use for deployment',
-            name: 'subscription',
-            choices: 'Dev/QA\nPre-Prod\nProd'
         )
     ])
 ])
