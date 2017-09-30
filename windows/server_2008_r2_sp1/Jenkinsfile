@@ -8,17 +8,11 @@ properties([
             description: 'Azure Environment ID',
             name: 'envid',
             defaultValue: ''
-        ),
-        choiceParam(
-            description: 'Which subscription to use for deployment',
-            name: 'subscription',
-            choices: 'Dev/QA\nPre-Prod\nProd'
         )
     ])
 ])
 
-// By default the job will use secrets from usw90 and West US 2 as location.
-def secretsEnvid = "usw90"
+// By default the job will use West US 2 as location.
 def location = "westus2"
 def envid = "${params.envid}".toLowerCase()
 def nodeLabel = "jenkins-slave-packer-azure"
@@ -27,30 +21,10 @@ def version = ''
 def objectId = ''
 def versionNumber = 'tbd'
 
-// If using the pre-prod subscription, override the secrets envid
-if ("${params.subscription}".toLowerCase() == "pre-prod") {
-    secretsEnvid = "usw20"
-}
-
-// If we're deploying to a known environment, override the secrets envid
-//
-// TODO: make this generic for all known environments
-if (envid.startsWith("usw8")) {
-    secretsEnvid = "usw80"
-} else if (envid == "usw01") {
-    secretsEnvid = "usw01"
-} else if (envid == "euw01") {
-    secretsEnvid = "euw01"
-} else if (envid == "usw02") {
-    secretsEnvid = "usw02"
-} else if (envid == "aue01") {
-    secretsEnvid = "aue01"
-}
-
 node(nodeLabel) {
     // Retrieve azure secrets from vault.
     def azureSecrets = [
-        [$class: 'VaultSecret', path: "secret/${secretsEnvid}/azure", secretValues: [
+        [$class: 'VaultSecret', path: "secret/${envid}/azure", secretValues: [
             [$class: 'VaultSecretValue', envVar: 'ARM_SUBSCRIPTION_ID', vaultKey: 'subscription_id'],
             [$class: 'VaultSecretValue', envVar: 'ARM_TENANT_ID', vaultKey: 'tenant_id'],
             [$class: 'VaultSecretValue', envVar: 'ARM_CLIENT_SECRET', vaultKey: 'client_secret'],
