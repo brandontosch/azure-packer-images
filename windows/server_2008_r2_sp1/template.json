@@ -47,6 +47,7 @@
     "provisioners": [
       {
         "type": "powershell",
+        "valid_exit_codes": [0, 3010],
         "inline": [
           "(New-Object Net.WebClient).DownloadFile('https://download.microsoft.com/download/E/7/6/E76850B8-DA6E-4FF5-8CCE-A24FC513FD16/Windows6.1-KB2506143-x64.msu', 'Windows6.1-KB2506143-x64.msu')",
           "wusa Windows6.1-KB2506143-x64.msu /extract:.",
