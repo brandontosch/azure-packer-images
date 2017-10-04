@@ -52,8 +52,8 @@
           "wusa Windows6.1-KB2506143-x64.msu /extract:.",
           "dism /online /add-package /NoRestart /PackagePath:Windows6.1-KB2506143-x64.cab",
           "Write-Host \"$(Get-Date): Rebooting...\"",
-          "shutdown /r /f",
-          "Start-Sleep -s 120"
+          "Restart-Computer -Force",
+          "Start-Sleep -s 300"
         ]
       },
       {
