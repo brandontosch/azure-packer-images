@@ -61,8 +61,7 @@
         "inline": [
           "Write-Host \"$(Get-Date): Beginning sysprep...\"",
           "if( Test-Path $Env:SystemRoot\\windows\\system32\\Sysprep\\unattend.xml ){ rm $Env:SystemRoot\\windows\\system32\\Sysprep\\unattend.xml -Force}",
-          "& $Env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /shutdown /quiet",
-          "Write-Host \"$(Get-Date): Sysprep complete.\""
+          "& $Env:SystemRoot\\System32\\Sysprep\\Sysprep.exe /oobe /generalize /shutdown /quiet"
         ]
       }
     ]
