@@ -106,14 +106,14 @@ node(nodeLabel) {
                             def builder = new JsonBuilder()
 
                             builder {
-                                azure_location: location,
-                                envid: envid,
-                                version: version,
-                                resource_group: resourceGroup,
-                                image_name: imageName,
-                                publisher: publisher,
-                                offer: offer,
-                                sku: sku
+                                azure_location location
+                                envid envid
+                                version version
+                                resource_group resourceGroup
+                                image_name imageName
+                                publisher publisher
+                                offer offer
+                                sku sku
                             }
 
                             // Write to file
