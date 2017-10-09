@@ -101,7 +101,7 @@ node(nodeLabel) {
                     ansiColor('xterm') {
                         wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
                             // Build var file
-                            def builder = new JsonBuilder()
+                            def builder = new groovy.json.JsonBuilder()
 
                             builder {
                                 azure_location location
