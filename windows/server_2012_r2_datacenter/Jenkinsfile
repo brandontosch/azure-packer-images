@@ -1,7 +1,4 @@
 properties([
-    // For CI integration with gitlabs.
-    [$class: 'GitLabConnectionProperty', gitLabConnection: 'lai1pucreps0001.inf.local'],
-
     // Job parameter defintions.
     parameters([
         stringParam(
@@ -16,7 +13,14 @@ properties([
 def location = "westus2"
 def envid = "${params.envid}".toLowerCase()
 def nodeLabel = "jenkins-slave-packer-azure"
+
 def resourceGroup = "${envid}images_rg"
+def templatePath = 'windows'
+def imageName = "${envid}windows_server_2012_r2_datacenter"
+def publisher = 'MicrosoftWindowsServer'
+def offer = 'WindowsServer'
+def sku = '2012-R2-Datacenter'
+
 def version = ''
 def objectId = ''
 def versionNumber = 'tbd'
@@ -34,23 +38,20 @@ node(nodeLabel) {
 
     try {
         // Send slack notification that build has started.
-        notifyBuild('STARTED', versionNumber)
+        notifyBuild('STARTED', versionNumber, imageName)
 
-        // For CI integration with gitlabs
-        gitlabCommitStatus('packer') {
-            // git stage
-            // Jenkins retrieves lastest code from git
-            stage('git') {
-                checkout scm
-            }
+        // git stage
+        // Jenkins retrieves lastest code from git
+        stage('git') {
+            checkout scm
+        }
 
-            // check stage
-            // Jenkins runs checks to validate packer template syntax
-            stage('check') {
-                dir("windows/server_2012_r2_datacenter") {
-                    ansiColor('xterm') {
-                        sh 'packer validate -syntax-only template.json'
-                    }
+        // check stage
+        // Jenkins runs checks to validate packer template syntax
+        stage('check') {
+            dir("${templatePath}") {
+                ansiColor('xterm') {
+                    sh 'packer validate -syntax-only template.json'
                 }
             }
         }
@@ -61,7 +62,7 @@ node(nodeLabel) {
                 wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
                     // Login to azure using service principal
                     sh 'az login -u "$ARM_CLIENT_ID" -p "$ARM_CLIENT_SECRET" --service-principal --tenant "$ARM_TENANT_ID"'
-                    // Ensure that we're scroped to the correct subscription
+                    // Ensure that we're scoped to the correct subscription
                     sh 'az account set --subscription "$ARM_SUBSCRIPTION_ID"'
                 }
             }
@@ -69,8 +70,7 @@ node(nodeLabel) {
             stage('version') {
                 ansiColor('xterm') {
                     // Get latest version number for the image
-                    version = sh script: "az vm image list -l \"${location}\" -p MicrosoftWindowsServer -s 2012-R2-Datacenter -f WindowsServer --all --query \"[].version\" -o tsv | sort -u | tail -n 1", returnStdout: true
-                    version = version.trim()
+                    version = sh (script: "az vm image list -l \"${location}\" -p ${publisher} -s ${sku} -f ${offer} --all --query \"[?sku=='${sku}'].version\" -o tsv | sort -u | tail -n 1", returnStdout: true).trim()
                     versionNumber = VersionNumber versionNumberString: "${version}"
                     sh "echo \"version: ${version}\""
                 }
@@ -90,8 +90,7 @@ node(nodeLabel) {
 
             stage('delete') {
                 ansiColor('xterm') {
-                    def existingId = sh script: "az image list -g '${resourceGroup}' --query \"[?name=='${envid}windows_server_2012_r2_datacenter'].id\" -o tsv", returnStdout: true
-                    existingId = existingId.trim()
+                    def existingId = sh (script: "az image list -g '${resourceGroup}' --query \"[?name=='${imageName}'].id\" -o tsv", returnStdout: true).trim()
 
                     if (existingId != '') {
                         sh "az image delete --ids '${existingId}'"
@@ -100,11 +99,28 @@ node(nodeLabel) {
             }
 
             stage('build') {
-                dir("windows/server_2012_r2_datacenter") {
+                dir("${templatePath}") {
                     ansiColor('xterm') {
                         wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
+                            // Build var file
+                            def builder = new JsonBuilder()
+
+                            builder {
+                                azure_location: location,
+                                envid: envid,
+                                version: version,
+                                resource_group: resourceGroup,
+                                image_name: imageName,
+                                publisher: publisher,
+                                offer: offer,
+                                sku: sku
+                            }
+
+                            // Write to file
+                            new File('./variables.json').write(builder.toPrettyString())
+
                             // Run packer build command
-                            sh "packer build -var 'azure_location=${location}' -var 'envid=${envid}' -var 'version=${version}' -var 'created_by=packer' template.json"
+                            sh "packer build -var-file=variables.json template.json"
                         }
                     }
                 }
@@ -116,18 +132,18 @@ node(nodeLabel) {
         throw any
     } finally {
         // Success or failure, always send notifications.
-        notifyBuild(currentBuild.result, versionNumber)
+        notifyBuild(currentBuild.result, versionNumber, imageName)
     }
 }
 
-def notifyBuild(String buildStatus = 'STARTED', String version) {
+def notifyBuild(String buildStatus = 'STARTED', String version, String imageName) {
   // Build status of null means successful.
   buildStatus =  buildStatus ?: 'SUCCESSFUL'
 
   // Default values.
   def colorName = 'RED'
   def colorCode = '#FF0000'
-  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' envid '${params.envid}' sub '${params.subscription}' version '${version}'"
+  def subject = "${buildStatus}: Job '${env.JOB_NAME} [${env.BUILD_NUMBER}]' envid '${params.envid}' image '${imageName}' version '${version}'"
   def envid = "${params.envid}".toLowerCase()
 
   if (envid == 'null' || envid == '') {
