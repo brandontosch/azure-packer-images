@@ -103,21 +103,21 @@ node(nodeLabel) {
                     ansiColor('xterm') {
                         wrap([$class: 'VaultBuildWrapper', vaultSecrets: azureSecrets]) {
                             // Build var file
-                            def builder = new groovy.json.JsonBuilder()
-
-                            builder {
-                                azure_location location
-                                envid envid
-                                version version
-                                resource_group resourceGroup
-                                image_name imageName
-                                publisher publisher
-                                offer offer
-                                sku sku
+                            def varJson = """
+                            {
+                                "azure_location": "${location}",
+                                "envid": "${envid}",
+                                "version": "${version}",
+                                "resource_group": "${resourceGroup}",
+                                "image_name": "${imageName}",
+                                "publisher": "${publisher}",
+                                "offer": "${offer}",
+                                "sku": "${sku}"
                             }
+                            """
 
                             // Write to file
-                            new File('./variables.json').write(builder.toPrettyString())
+                            sh "cat <<EOT >> variables.json ${varJson}"
 
                             // Run packer build command
                             sh "packer build -var-file=variables.json template.json"
