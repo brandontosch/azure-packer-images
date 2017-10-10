@@ -117,7 +117,7 @@ node(nodeLabel) {
                             """
 
                             // Write to file
-                            sh "cat <<EOT >> variables.json ${varJson}"
+                            sh "echo ${varJson} >> variables.json"
 
                             // Run packer build command
                             sh "packer build -var-file=variables.json template.json"
