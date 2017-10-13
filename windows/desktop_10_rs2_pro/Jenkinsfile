@@ -5,12 +5,16 @@ properties([
             description: 'Azure Environment ID',
             name: 'envid',
             defaultValue: ''
+        ),
+        choiceParam(
+            description: 'Azure location',
+            name: 'location',
+            choices: 'eastasia\nsoutheastasia\ncentralus\neastus\neastus2\nwestus\nnorthcentralus\nsouthcentralus\nnortheurope\nwesteurope\njapanwest\njapaneast\nbrazilsouth\naustraliaeast\naustraliasoutheastnsouthindia\ncentralindia\nwestindia\ncanadacentral\ncanadaeast\nuksouth\nukwest\nwestcentralus\nwestus2\nkoreacentral\nkoreasouth'
         )
     ])
 ])
 
-// By default the job will use West US 2 as location.
-def location = "westus2"
+def location = "${params.location}"
 def envid = "${params.envid}".toLowerCase()
 def nodeLabel = "jenkins-slave-packer-azure"
 
